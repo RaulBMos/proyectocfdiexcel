@@ -10,6 +10,7 @@ def exportar_a_excel(lista_datos_cfdi, ruta_salida):
 
     filas_general = []
     filas_conceptos = []
+    filas_documentos_relacionados = []
 
     for datos in lista_datos_cfdi:
         # --- Fila para la hoja de datos generales ---
