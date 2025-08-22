@@ -47,6 +47,24 @@ def exportar_a_excel(lista_datos_cfdi, ruta_salida):
             }
             filas_conceptos.append(fila_con)
 
+        # --- Filas para la hoja de documentos relacionados (complemento de pagos) ---
+        if 'pagos' in datos.get('complementos', {}):
+            for pago in datos['complementos']['pagos']:
+                uuid_pago = pago.get('uuid', uuid) # Usar UUID del CFDI si el pago no tiene uno propio
+                for doc_rel in pago.get('documentos_relacionados', []):
+                    fila_doc_rel = {
+                        'UUID_CFDI': uuid, # UUID del CFDI principal
+                        'UUID_Pago': uuid_pago, # UUID del pago si aplica
+                        'IdDocumento': doc_rel.get('id_documento'),
+                        'Serie': doc_rel.get('serie'),
+                        'Folio': doc_rel.get('folio'),
+                        'MonedaDR': doc_rel.get('moneda'),
+                        'ImpSaldoAnt': doc_rel.get('imp_saldo_ant'),
+                        'ImpPagado': doc_rel.get('imp_pagado'),
+                        'ImpSaldoInsoluto': doc_rel.get('imp_saldo_insoluto')
+                    }
+                    filas_documentos_relacionados.append(fila_doc_rel)
+
     if not filas_general:
         print("No hay datos generales para exportar.")
         return
@@ -55,11 +73,14 @@ def exportar_a_excel(lista_datos_cfdi, ruta_salida):
         # Crear los DataFrames de pandas
         df_general = pd.DataFrame(filas_general)
         df_conceptos = pd.DataFrame(filas_conceptos)
+        df_documentos_relacionados = pd.DataFrame(filas_documentos_relacionados)
 
         # Escribir a Excel usando ExcelWriter para crear múltiples hojas
         with pd.ExcelWriter(ruta_salida, engine='openpyxl') as writer:
             df_general.to_excel(writer, sheet_name='CFDI_General', index=False)
             df_conceptos.to_excel(writer, sheet_name='Conceptos', index=False)
+            if not df_documentos_relacionados.empty:
+                df_documentos_relacionados.to_excel(writer, sheet_name='Documentos Relacionados', index=False)
         
         print(f"✅ ¡Éxito! Archivo guardado en: {ruta_salida}")
 
